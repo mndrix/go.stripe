@@ -18,6 +18,7 @@ const (
 //
 // see https://stripe.com/docs/api#subscription_object
 type Subscription struct {
+	Id                 string `json:"id"`
 	Customer           string `json:"customer"`
 	Status             string `json:"status"`
 	Plan               *Plan  `json:"plan"`
