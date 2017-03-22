@@ -149,6 +149,12 @@ func TestDeletePlan(t *testing.T) {
 // parse the JSON reponse, and that the length of the coupon array matches our
 // expectations.
 func TestListPlan(t *testing.T) {
+	// how many plans are in the account to start?
+	plans, err := Plans.List()
+	if err != nil {
+		t.Errorf("Expected Plan List, got Error %s", err.Error())
+	}
+	started := len(plans)
 
 	// create 2 dummy plans that we can retrieve
 	Plans.Create(&p1)
@@ -157,13 +163,14 @@ func TestListPlan(t *testing.T) {
 	defer Plans.Delete(p2.Id)
 
 	// get the list from Stripe
-	plans, err := Plans.List()
+	plans, err = Plans.List()
 	if err != nil {
 		t.Errorf("Expected Plan List, got Error %s", err.Error())
 	}
+	got := len(plans)
 
 	// since we added 2 dummy plans, we expect the array to be a size of 2
-	if len(plans) != 2 {
+	if got != started+2 {
 		t.Errorf("Expected 2 Plans, got %d", len(plans))
 	}
 }
