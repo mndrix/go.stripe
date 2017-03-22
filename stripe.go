@@ -68,7 +68,6 @@ func query(method, path string, values url.Values, v interface{}) error {
 
 	// set the endpoint for the specific API
 	endpoint.Path = path
-	endpoint.User = url.User(_key)
 
 	// if this is an http GET, add the url.Values to the endpoint
 	if method == "GET" {
@@ -94,6 +93,7 @@ func query(method, path string, values url.Values, v interface{}) error {
 	}
 
 	req.Header.Set("Stripe-Version", apiVersion)
+	req.SetBasicAuth(_key, "")
 
 	// submit the http request
 	r, err := http.DefaultClient.Do(req)
