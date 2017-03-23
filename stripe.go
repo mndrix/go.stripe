@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"golang.org/x/net/context"
 )
@@ -19,6 +20,9 @@ var _log bool
 
 // the API Key used to authenticate all Stripe API requests
 var _key string
+
+// the default timeout for Stripe API requests
+var _timeout time.Duration
 
 // the default URL for all Stripe API requests
 var _url string = "https://api.stripe.com"
@@ -35,6 +39,12 @@ func SetUrl(url string) {
 // API requests.
 func SetKey(key string) {
 	_key = key
+}
+
+// SetTimeout overrides the default timeout for making Stripe API
+// calls.
+func SetTimeout(timeout time.Duration) {
+	_timeout = timeout
 }
 
 // Available APIs
@@ -101,6 +111,11 @@ func query(ctx context.Context, method, path string, values url.Values, v interf
 	// submit the http request
 	if ctx == nil {
 		ctx = context.Background()
+	}
+	if _timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, _timeout)
+		defer cancel()
 	}
 	client := getHttpClient(ctx)
 	req = req.WithContext(ctx)
