@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"os"
 	"strings"
+
+	"golang.org/x/net/context"
 )
 
 // enable logging to print the request and reponses to stdout
@@ -59,7 +61,8 @@ func SetKeyEnv() (err error) {
 
 // query submits an http.Request and parses the JSON-encoded http.Response,
 // storing the result in the value pointed to by v.
-func query(method, path string, values url.Values, v interface{}) error {
+func query(ctx context.Context, method, path string, values url.Values, v interface{}) error {
+
 	// parse the stripe URL
 	endpoint, err := url.Parse(_url)
 	if err != nil {
@@ -96,7 +99,12 @@ func query(method, path string, values url.Values, v interface{}) error {
 	req.SetBasicAuth(_key, "")
 
 	// submit the http request
-	r, err := http.DefaultClient.Do(req)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	client := getHttpClient(ctx)
+	req = req.WithContext(ctx)
+	r, err := client.Do(req)
 	if err != nil {
 		return err
 	}

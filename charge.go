@@ -3,6 +3,8 @@ package stripe
 import (
 	"net/url"
 	"strconv"
+
+	"golang.org/x/net/context"
 )
 
 // ISO 3-digit Currency Codes for major currencies (not the full list).
@@ -86,7 +88,14 @@ type ChargeParams struct {
 
 // ChargeClient encapsulates operations for creating, updating, deleting and
 // querying charges using the Stripe REST API.
-type ChargeClient struct{}
+type ChargeClient struct {
+	ctx context.Context
+}
+
+// Set client's Context
+func (self *ChargeClient) SetContext(ctx context.Context) {
+	self.ctx = ctx
+}
 
 // Creates a new credit card Charge.
 //
@@ -114,7 +123,7 @@ func (self *ChargeClient) Create(params *ChargeParams) (*Charge, error) {
 		values.Add("statement_description", params.StatementDescription)
 	}
 
-	err := query("POST", "/v1/charges", values, &charge)
+	err := query(self.ctx, "POST", "/v1/charges", values, &charge)
 	return &charge, err
 }
 
@@ -124,7 +133,7 @@ func (self *ChargeClient) Create(params *ChargeParams) (*Charge, error) {
 func (self *ChargeClient) Retrieve(id string) (*Charge, error) {
 	charge := Charge{}
 	path := "/v1/charges/" + url.QueryEscape(id)
-	err := query("GET", path, nil, &charge)
+	err := query(self.ctx, "GET", path, nil, &charge)
 	return &charge, err
 }
 
@@ -135,7 +144,7 @@ func (self *ChargeClient) Refund(id string) (*Charge, error) {
 	values := url.Values{}
 	charge := Charge{}
 	path := "/v1/charges/" + url.QueryEscape(id) + "/refund"
-	err := query("POST", path, values, &charge)
+	err := query(self.ctx, "POST", path, values, &charge)
 	return &charge, err
 }
 
@@ -148,7 +157,7 @@ func (self *ChargeClient) RefundAmount(id string, amt int64) (*Charge, error) {
 	}
 	charge := Charge{}
 	path := "/v1/charges/" + url.QueryEscape(id) + "/refund"
-	err := query("POST", path, values, &charge)
+	err := query(self.ctx, "POST", path, values, &charge)
 	return &charge, err
 }
 
@@ -197,7 +206,7 @@ func (self *ChargeClient) list(id string, count int, offset int) ([]*Charge, err
 		values.Add("customer", id)
 	}
 
-	err := query("GET", "/v1/charges", values, &resp)
+	err := query(self.ctx, "GET", "/v1/charges", values, &resp)
 	if err != nil {
 		return nil, err
 	}

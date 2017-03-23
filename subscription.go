@@ -3,6 +3,8 @@ package stripe
 import (
 	"net/url"
 	"strconv"
+
+	"golang.org/x/net/context"
 )
 
 // Subscription Statuses
@@ -35,7 +37,14 @@ type Subscription struct {
 
 // SubscriptionClient encapsulates operations for updating and canceling
 // customer subscriptions using the Stripe REST API.
-type SubscriptionClient struct{}
+type SubscriptionClient struct {
+	ctx context.Context
+}
+
+// Set client's Context
+func (self *SubscriptionClient) SetContext(ctx context.Context) {
+	self.ctx = ctx
+}
 
 // SubscriptionParams encapsulates options for updating a Customer's
 // subscription.
@@ -95,7 +104,7 @@ func (self *SubscriptionClient) Update(customerId string, params *SubscriptionPa
 
 	s := Subscription{}
 	path := "/v1/customers/" + url.QueryEscape(customerId) + "/subscription"
-	err := query("POST", path, values, &s)
+	err := query(self.ctx, "POST", path, values, &s)
 	return &s, err
 }
 
@@ -106,7 +115,7 @@ func (self *SubscriptionClient) Update(customerId string, params *SubscriptionPa
 func (self *SubscriptionClient) Cancel(customerId string) (*Subscription, error) {
 	s := Subscription{}
 	path := "/v1/customers/" + url.QueryEscape(customerId) + "/subscription"
-	err := query("DELETE", path, nil, &s)
+	err := query(self.ctx, "DELETE", path, nil, &s)
 	return &s, err
 }
 
@@ -119,6 +128,6 @@ func (self *SubscriptionClient) CancelAtPeriodEnd(customerId string) (*Subscript
 
 	s := Subscription{}
 	path := "/v1/customers/" + url.QueryEscape(customerId) + "/subscription"
-	err := query("DELETE", path, values, &s)
+	err := query(self.ctx, "DELETE", path, values, &s)
 	return &s, err
 }

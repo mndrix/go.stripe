@@ -3,6 +3,8 @@ package stripe
 import (
 	"net/url"
 	"strconv"
+
+	"golang.org/x/net/context"
 )
 
 // Plan Intervals
@@ -29,7 +31,14 @@ type Plan struct {
 
 // PlanClient encapsulates operations for creating, updating, deleting and
 // querying plans using the Stripe REST API.
-type PlanClient struct{}
+type PlanClient struct {
+	ctx context.Context
+}
+
+// Set client's Context
+func (self *PlanClient) SetContext(ctx context.Context) {
+	self.ctx = ctx
+}
 
 // PlanParams encapsulates options for creating a new Plan.
 type PlanParams struct {
@@ -75,7 +84,7 @@ func (self *PlanClient) Create(params *PlanParams) (*Plan, error) {
 		values.Add("trial_period_days", strconv.Itoa(params.TrialPeriodDays))
 	}
 
-	err := query("POST", "/v1/plans", values, &plan)
+	err := query(self.ctx, "POST", "/v1/plans", values, &plan)
 	return &plan, err
 }
 
@@ -85,7 +94,7 @@ func (self *PlanClient) Create(params *PlanParams) (*Plan, error) {
 func (self *PlanClient) Retrieve(id string) (*Plan, error) {
 	plan := Plan{}
 	path := "/v1/plans/" + url.QueryEscape(id)
-	err := query("GET", path, nil, &plan)
+	err := query(self.ctx, "GET", path, nil, &plan)
 	return &plan, err
 }
 
@@ -97,7 +106,7 @@ func (self *PlanClient) Update(id string, newName string) (*Plan, error) {
 	values := url.Values{"name": {newName}}
 	plan := Plan{}
 	path := "/v1/plans/" + url.QueryEscape(id)
-	err := query("POST", path, values, &plan)
+	err := query(self.ctx, "POST", path, values, &plan)
 	return &plan, err
 }
 
@@ -107,7 +116,7 @@ func (self *PlanClient) Update(id string, newName string) (*Plan, error) {
 func (self *PlanClient) Delete(id string) (bool, error) {
 	resp := DeleteResp{}
 	path := "/v1/plans/" + url.QueryEscape(id)
-	if err := query("DELETE", path, nil, &resp); err != nil {
+	if err := query(self.ctx, "DELETE", path, nil, &resp); err != nil {
 		return false, err
 	}
 	return resp.Deleted, nil
@@ -135,7 +144,7 @@ func (self *PlanClient) ListN(count int, offset int) ([]*Plan, error) {
 		"offset": {strconv.Itoa(offset)},
 	}
 
-	err := query("GET", "/v1/plans", values, &resp)
+	err := query(self.ctx, "GET", "/v1/plans", values, &resp)
 	if err != nil {
 		return nil, err
 	}
