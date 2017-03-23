@@ -118,7 +118,6 @@ func query(ctx context.Context, method, path string, values url.Values, v interf
 		defer cancel()
 	}
 	client := getHttpClient(ctx)
-	req = req.WithContext(ctx)
 	r, err := client.Do(req)
 	if err != nil {
 		return err
